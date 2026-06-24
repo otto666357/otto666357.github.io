@@ -164,13 +164,28 @@ if (type === 'article') {
         htmlLang: document.documentElement.getAttribute('lang'),
         pathname: location.pathname,
         hasVT: !!document.querySelector('meta[name="astro-view-transitions-enabled"]'),
+        scriptOrder: 'inline-script-position',
       },
     };
     append(bootRec);
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', render, { once: true });
-    } else {
+    // After the rest of <head> has been parsed (including the VT meta), record again.
+    function lateBootCheck() {
+      append({
+        t: Date.now(),
+        hyp: 'boot',
+        loc: 'BaseHead:DOMContentLoaded',
+        msg: 'post-DCL check',
+        data: {
+          hasVT: !!document.querySelector('meta[name="astro-view-transitions-enabled"]'),
+          metaNames: Array.from(document.querySelectorAll('meta[name]')).map(function (m) { return m.getAttribute('name'); }),
+        },
+      });
       render();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', lateBootCheck, { once: true });
+    } else {
+      lateBootCheck();
     }
     document.addEventListener(
       'click',
@@ -206,8 +221,29 @@ if (type === 'article') {
         data: {
           from: location.pathname,
           to: e.to && e.to.url ? e.to.url.pathname : null,
+          toHref: e.to && e.to.url ? e.to.url.href : null,
+          toOrigin: e.to && e.to.url ? e.to.url.origin : null,
           direction: e.direction || null,
           navigationType: e.navigationType || null,
+          formData: !!e.formData,
+        },
+      });
+      render();
+    });
+    document.addEventListener('astro:before-swap', function (e) {
+      append({
+        t: Date.now(),
+        hyp: 'A',
+        loc: 'BaseHead:astro:before-swap',
+        msg: 'VT before-swap',
+        data: {
+          from: location.pathname,
+          to: e.to && e.to.url ? e.to.url.pathname : null,
+          toHref: e.to && e.to.url ? e.to.url.href : null,
+          toOrigin: e.to && e.to.url ? e.to.url.origin : null,
+          defaultPrevented: e.defaultPrevented,
+          newDocHasVT: !!(e.newDocument && e.newDocument.querySelector && e.newDocument.querySelector('meta[name="astro-view-transitions-enabled"]')),
+          newDocHtmlLang: e.newDocument && e.newDocument.documentElement ? e.newDocument.documentElement.getAttribute('lang') : null,
         },
       });
       render();
@@ -222,6 +258,20 @@ if (type === 'article') {
           from: location.pathname,
           to: e.to && e.to.url ? e.to.url.pathname : null,
           newHtmlLang: document.documentElement.getAttribute('lang'),
+        },
+      });
+      render();
+    });
+    document.addEventListener('astro:after-preparation', function (e) {
+      append({
+        t: Date.now(),
+        hyp: 'A',
+        loc: 'BaseHead:astro:after-preparation',
+        msg: 'VT after-prep',
+        data: {
+          from: location.pathname,
+          to: e.to && e.to.url ? e.to.url.pathname : null,
+          defaultPrevented: e.defaultPrevented,
         },
       });
       render();
