@@ -1,0 +1,66 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import PostMeta from '~/components/PostMeta.astro';
+import { getLangFromUrl, getLocalizedPath, type Language } from '~/i18n/utils';
+import { t } from '~/i18n/ui';
+import { readingTime, wordCount } from '~/utils/readingTime';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+const lang: Language = getLangFromUrl(Astro.url);
+const body = post.body ?? '';
+const minutes = readingTime(body, lang);
+const words = wordCount(body, lang);
+
+const tagsHref = getLocalizedPath('/tags', lang) + '/';
+const homeHref = lang === 'zh' ? '/' : '/en/';
+---
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+  pubDate={post.data.pubDate}
+  updatedDate={post.data.updatedDate}
+  tags={post.data.tags}
+>
+  <article>
+    <header class="post-header">
+      <h1 class="post-header__title">{post.data.title}</h1>
+      <p class="post-header__description">{post.data.description}</p>
+      <PostMeta
+        pubDate={post.data.pubDate}
+        updatedDate={post.data.updatedDate}
+        minutes={minutes}
+        words={words}
+        lang={lang}
+      />
+    </header>
+
+    <div class="prose">
+      <slot />
+    </div>
+
+    {
+      post.data.tags.length > 0 && (
+        <footer class="post-footer">
+          <div class="post-tags">
+            <span class="post-tags__label">{t('post.tags', lang)}:</span>
+            {post.data.tags.map((tag) => (
+              <a class="tag" href={`${tagsHref}${encodeURIComponent(tag)}/`}>
+                #{tag}
+              </a>
+            ))}
+          </div>
+        </footer>
+      )
+    }
+
+    <p style="margin-top: var(--space-8);">
+      <a href={homeHref}>&larr; {t('post.back', lang)}</a>
+    </p>
+  </article>
+</BaseLayout>

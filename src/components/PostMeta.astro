@@ -1,0 +1,33 @@
+---
+import FormattedDate from './FormattedDate.astro';
+import { t, type Language } from '~/i18n/ui';
+
+interface Props {
+  pubDate: Date;
+  updatedDate?: Date;
+  minutes: number;
+  words: number;
+  lang: Language;
+}
+
+const { pubDate, updatedDate, minutes, words, lang } = Astro.props;
+---
+<div class="post-meta">
+  <span>
+    {t('post.published', lang)} <FormattedDate date={pubDate} />
+  </span>
+  {
+    updatedDate && (
+      <>
+        <span class="post-meta__divider" aria-hidden="true"></span>
+        <span>
+          {t('post.updated', lang)} <FormattedDate date={updatedDate} />
+        </span>
+      </>
+    )
+  }
+  <span class="post-meta__divider" aria-hidden="true"></span>
+  <span>{minutes} {t('post.readTime', lang)}</span>
+  <span class="post-meta__divider" aria-hidden="true"></span>
+  <span>{words.toLocaleString()} {t('post.words', lang)}</span>
+</div>

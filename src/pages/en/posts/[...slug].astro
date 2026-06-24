@@ -1,0 +1,25 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import PostLayout from '~/layouts/PostLayout.astro';
+import { type Language } from '~/i18n/utils';
+import { postSlug } from '~/utils/readingTime';
+
+export async function getStaticPaths() {
+  const lang: Language = 'en';
+  const posts = await getCollection('posts', ({ data }) => !data.draft && data.lang === lang);
+  return posts.map((post) => ({
+    params: { slug: postSlug(post) },
+    props: { post },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+<PostLayout post={post}>
+  <Content />
+</PostLayout>

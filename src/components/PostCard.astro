@@ -1,0 +1,30 @@
+---
+import FormattedDate from './FormattedDate.astro';
+import { getLocalizedPath, type Language } from '~/i18n/utils';
+
+interface Props {
+  url: string;
+  title: string;
+  description: string;
+  pubDate: Date;
+  tags: string[];
+  lang: Language;
+}
+
+const { url, title, description, pubDate, tags, lang } = Astro.props;
+const tagsHref = getLocalizedPath('/tags', lang) + '/';
+---
+<article class="post-card">
+  <h3 class="post-card__title">
+    <a href={url}>{title}</a>
+  </h3>
+  <p class="post-card__description">{description}</p>
+  <div class="post-card__meta">
+    <FormattedDate date={pubDate} />
+    {tags.length > 0 && <span class="post-card__tags">
+      {tags.slice(0, 4).map((tag) => (
+        <a class="tag" href={`${tagsHref}${encodeURIComponent(tag)}/`}>#{tag}</a>
+      ))}
+    </span>}
+  </div>
+</article>

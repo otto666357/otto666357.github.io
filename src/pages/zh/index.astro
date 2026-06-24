@@ -1,0 +1,52 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import PostCard from '~/components/PostCard.astro';
+import { defaultLanguage, type Language } from '~/i18n/utils';
+import { t } from '~/i18n/ui';
+import { postSlug } from '~/utils/readingTime';
+
+const lang: Language = defaultLanguage;
+
+const posts = (await getCollection('posts', ({ data }) => !data.draft && data.lang === lang))
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+
+const recent = posts.slice(0, 5);
+const archiveHref = `/${lang}/archive/`;
+---
+<BaseLayout title={t('home.title', lang)} description={t('home.description', lang)}>
+  <header class="page-header">
+    <h1 class="page-header__title">{t('home.title', lang)}</h1>
+    <p class="page-header__description">{t('home.description', lang)}</p>
+  </header>
+
+  <h2 class="section-title">{t('home.recent', lang)}</h2>
+
+  {
+    posts.length === 0 ? (
+      <p>{t('home.empty', lang)}</p>
+    ) : (
+      <>
+        <ul class="post-list">
+          {recent.map((post) => (
+            <li>
+              <PostCard
+                url={`/${lang}/posts/${postSlug(post)}/`}
+                title={post.data.title}
+                description={post.data.description}
+                pubDate={post.data.pubDate}
+                tags={post.data.tags}
+                lang={lang}
+              />
+            </li>
+          ))}
+        </ul>
+        {posts.length > recent.length && (
+          <p style="margin-top: var(--space-8);">
+            <a href={archiveHref}>{t('home.all', lang)} &rarr;</a>
+          </p>
+        )}
+      </>
+    )
+  }
+</BaseLayout>

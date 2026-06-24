@@ -1,0 +1,41 @@
+---
+import { getLangFromUrl, getLocalizedPath, type Language } from '~/i18n/utils';
+import { languages, defaultLanguage } from '~/i18n/ui';
+import ThemeToggle from './ThemeToggle.astro';
+import LanguageSwitch from './LanguageSwitch.astro';
+import { t } from '~/i18n/ui';
+
+const lang = getLangFromUrl(Astro.url);
+const path = Astro.url.pathname;
+const homeHref = lang === defaultLanguage ? '/' : `/${lang}/`;
+const archiveHref = getLocalizedPath('/archive', lang) + '/';
+const tagsHref = getLocalizedPath('/tags', lang) + '/';
+const aboutHref = getLocalizedPath('/about', lang) + '/';
+
+const navItems: { key: keyof typeof import('~/i18n/ui').ui.zh; href: string }[] = [
+  { key: 'nav.archive', href: archiveHref },
+  { key: 'nav.tags', href: tagsHref },
+  { key: 'nav.about', href: aboutHref },
+];
+
+function isCurrent(href: string): boolean {
+  if (href === homeHref) return path === homeHref || path === `/${lang}` || path === `/${lang}/`;
+  return path.startsWith(href);
+}
+---
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a href={homeHref} class="site-header__brand">yeye</a>
+    <nav class="site-header__nav" aria-label="Primary">
+      {
+        navItems.map((item) => (
+          <a href={item.href} class="nav-link" aria-current={isCurrent(item.href) ? 'page' : undefined}>
+            {t(item.key, lang)}
+          </a>
+        ))
+      }
+      <LanguageSwitch currentLang={lang} />
+      <ThemeToggle />
+    </nav>
+  </div>
+</header>

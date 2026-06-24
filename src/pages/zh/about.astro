@@ -1,0 +1,30 @@
+﻿---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { defaultLanguage, type Language } from '~/i18n/utils';
+
+const lang: Language = defaultLanguage;
+---
+<BaseLayout title="关于" description="关于我">
+  <header class="page-header">
+    <h1 class="page-header__title">关于</h1>
+  </header>
+
+  <div class="prose">
+    <p>欢迎来到我的个人博客。这里记录我在技术、阅读、生活中的思考与发现。</p>
+    <p>
+      这个站点使用 <a href="https://astro.build" rel="noopener" target="_blank">Astro</a> 构建,
+      支持中英双语,自动部署到 GitHub Pages。
+    </p>
+    <h2>写作原则</h2>
+    <ul>
+      <li>把一个想法写到自己能完全解释清楚</li>
+      <li>优先解释"为什么",而不是"怎么做"</li>
+      <li>代码示例要可运行,而不是片段</li>
+    </ul>
+    <h2>联系我</h2>
+    <ul>
+      <li>GitHub: <a href="https://github.com/otto666357" rel="noopener" target="_blank">@otto666357</a></li>
+      <li>Email: <a href="mailto:hello@example.com">hello@example.com</a></li>
+    </ul>
+  </div>
+</BaseLayout>

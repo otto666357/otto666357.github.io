@@ -1,0 +1,9 @@
+---
+import { defaultLanguage } from '~/i18n/utils';
+
+const acceptLanguage = Astro.request.headers.get('accept-language') || '';
+const preferred = acceptLanguage.split(',')[0]?.slice(0, 2).toLowerCase();
+const target = preferred === 'en' ? '/en/' : `/${defaultLanguage}/`;
+
+return Astro.redirect(target, 302);
+---

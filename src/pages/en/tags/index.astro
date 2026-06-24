@@ -1,0 +1,39 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { type Language } from '~/i18n/utils';
+import { t } from '~/i18n/ui';
+
+const lang: Language = 'en';
+
+const posts = await getCollection('posts', ({ data }) => !data.draft && data.lang === lang);
+
+const tagCounts = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  }
+}
+
+const tags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
+---
+<BaseLayout title={t('tags.title', lang)} description={t('tags.description', lang)}>
+  <header class="page-header">
+    <h1 class="page-header__title">{t('tags.title', lang)}</h1>
+    <p class="page-header__description">{t('tags.description', lang)}</p>
+  </header>
+
+  {
+    tags.length === 0 ? (
+      <p>{t('tags.empty', lang)}</p>
+    ) : (
+      <div class="tag-cloud">
+        {tags.map(([tag, count]) => (
+          <a class="tag" href={`/${lang}/tags/${encodeURIComponent(tag)}/`}>
+            #{tag} <span style="color: var(--text-faint);">({count})</span>
+          </a>
+        ))}
+      </div>
+    )
+  }
+</BaseLayout>

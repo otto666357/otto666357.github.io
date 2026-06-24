@@ -1,0 +1,26 @@
+---
+interface Props {
+  date: Date;
+  format?: 'short' | 'long' | 'iso';
+}
+
+const { date, format = 'long' } = Astro.props;
+
+let display: string;
+if (format === 'iso') {
+  display = date.toISOString().slice(0, 10);
+} else if (format === 'short') {
+  display = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+} else {
+  display = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
+---
+<time datetime={date.toISOString()}>{display}</time>

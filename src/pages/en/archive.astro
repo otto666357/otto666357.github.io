@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import FormattedDate from '~/components/FormattedDate.astro';
+import { type Language } from '~/i18n/utils';
+import { t } from '~/i18n/ui';
+import { postSlug } from '~/utils/readingTime';
+
+const lang: Language = 'en';
+
+const posts = (await getCollection('posts', ({ data }) => !data.draft && data.lang === lang))
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+
+const grouped = new Map<number, typeof posts>();
+for (const post of posts) {
+  const year = post.data.pubDate.getFullYear();
+  if (!grouped.has(year)) grouped.set(year, []);
+  grouped.get(year)!.push(post);
+}
+const years = Array.from(grouped.keys()).sort((a, b) => b - a);
+---
+<BaseLayout title={t('archive.title', lang)} description={t('archive.description', lang)}>
+  <header class="page-header">
+    <h1 class="page-header__title">{t('archive.title', lang)}</h1>
+    <p class="page-header__description">{t('archive.description', lang)}</p>
+  </header>
+
+  {
+    years.length === 0 ? (
+      <p>{t('home.empty', lang)}</p>
+    ) : (
+      years.map((year) => (
+        <section>
+          <h2 class="archive-year">{year}</h2>
+          <ul class="archive-list">
+            {grouped.get(year)!.map((post) => (
+              <li class="archive-item">
+                <span class="archive-item__date">
+                  <FormattedDate date={post.data.pubDate} format="short" />
+                </span>
+                <span class="archive-item__title">
+                  <a href={`/${lang}/posts/${postSlug(post)}/`}>{post.data.title}</a>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    )
+  }
+</BaseLayout>
