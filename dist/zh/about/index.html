@@ -107,6 +107,7 @@
       true
     );
     document.addEventListener('astro:before-preparation', function (e) {
+      var toUrl = e.to instanceof URL ? e.to : (e.to && e.to.url) ? e.to.url : null;
       append({
         t: Date.now(),
         hyp: 'A',
@@ -114,17 +115,28 @@
         msg: 'VT before-prep',
         data: {
           from: location.pathname,
-          to: e.to && e.to.url ? e.to.url.pathname : null,
-          toHref: e.to && e.to.url ? e.to.url.href : null,
-          toOrigin: e.to && e.to.url ? e.to.url.origin : null,
+          to: toUrl ? toUrl.pathname : (e.to && typeof e.to === 'string' ? e.to : null),
+          toHref: toUrl ? toUrl.href : null,
+          toOrigin: toUrl ? toUrl.origin : null,
           direction: e.direction || null,
           navigationType: e.navigationType || null,
           formData: !!e.formData,
+          toType: typeof e.to,
         },
       });
       render();
     });
     document.addEventListener('astro:before-swap', function (e) {
+      var toUrl = e.to instanceof URL ? e.to : (e.to && e.to.url) ? e.to.url : null;
+      var newDoc = e.newDocument;
+      var newDocHasVT = false;
+      var newDocHtmlLang = null;
+      try {
+        if (newDoc) {
+          newDocHasVT = !!newDoc.querySelector('meta[name="astro-view-transitions-enabled"]');
+          if (newDoc.documentElement) newDocHtmlLang = newDoc.documentElement.getAttribute('lang');
+        }
+      } catch (_) {}
       append({
         t: Date.now(),
         hyp: 'A',
@@ -132,17 +144,19 @@
         msg: 'VT before-swap',
         data: {
           from: location.pathname,
-          to: e.to && e.to.url ? e.to.url.pathname : null,
-          toHref: e.to && e.to.url ? e.to.url.href : null,
-          toOrigin: e.to && e.to.url ? e.to.url.origin : null,
+          to: toUrl ? toUrl.pathname : null,
+          toHref: toUrl ? toUrl.href : null,
+          toOrigin: toUrl ? toUrl.origin : null,
           defaultPrevented: e.defaultPrevented,
-          newDocHasVT: !!(e.newDocument && e.newDocument.querySelector && e.newDocument.querySelector('meta[name="astro-view-transitions-enabled"]')),
-          newDocHtmlLang: e.newDocument && e.newDocument.documentElement ? e.newDocument.documentElement.getAttribute('lang') : null,
+          newDocHasVT: newDocHasVT,
+          newDocHtmlLang: newDocHtmlLang,
+          newDocHasHTML: !!(newDoc && newDoc.documentElement),
         },
       });
       render();
     });
     document.addEventListener('astro:after-swap', function (e) {
+      var toUrl = e.to instanceof URL ? e.to : (e.to && e.to.url) ? e.to.url : null;
       append({
         t: Date.now(),
         hyp: 'A',
@@ -150,13 +164,14 @@
         msg: 'VT after-swap',
         data: {
           from: location.pathname,
-          to: e.to && e.to.url ? e.to.url.pathname : null,
+          to: toUrl ? toUrl.pathname : null,
           newHtmlLang: document.documentElement.getAttribute('lang'),
         },
       });
       render();
     });
     document.addEventListener('astro:after-preparation', function (e) {
+      var toUrl = e.to instanceof URL ? e.to : (e.to && e.to.url) ? e.to.url : null;
       append({
         t: Date.now(),
         hyp: 'A',
@@ -164,7 +179,7 @@
         msg: 'VT after-prep',
         data: {
           from: location.pathname,
-          to: e.to && e.to.url ? e.to.url.pathname : null,
+          to: toUrl ? toUrl.pathname : null,
           defaultPrevented: e.defaultPrevented,
         },
       });
