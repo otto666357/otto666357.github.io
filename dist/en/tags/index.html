@@ -11,75 +11,119 @@
   })();
 </script><!-- #region agent log (hypothesis: VT cross-language navigation behaviour) --><script>
   (function () {
-    var ENDPOINT = 'http://127.0.0.1:7902/ingest/1009a666-9bca-4d90-b02d-1c4df45cf258';
-    var SESSION = '2d1864';
-    var RUN_ID = 'observe-' + Date.now();
-    function send(hyp, loc, msg, data) {
+    var KEY = '__dbg_nav_log';
+    var LS_KEY = '__dbg_nav_ls';
+    function append(rec) {
       try {
-        fetch(ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': SESSION },
-          body: JSON.stringify({
-            sessionId: SESSION,
-            runId: RUN_ID,
-            hypothesisId: hyp,
-            location: loc,
-            message: msg,
-            data: data || {},
-            timestamp: Date.now(),
-          }),
-        }).catch(function () {});
+        var arr = JSON.parse(sessionStorage.getItem(KEY) || '[]');
+        arr.push(rec);
+        sessionStorage.setItem(KEY, JSON.stringify(arr));
+      } catch (_) {}
+      try {
+        var ls = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+        ls.push(rec);
+        if (ls.length > 50) ls = ls.slice(-50);
+        localStorage.setItem(LS_KEY, JSON.stringify(ls));
       } catch (_) {}
     }
-    send('boot', 'BaseHead:inline', 'boot', {
-      htmlLang: document.documentElement.getAttribute('lang'),
-      pathname: location.pathname,
-      hasVT: !!document.querySelector('meta[name="astro-view-transitions-enabled"]'),
-    });
+    var bootRec = {
+      t: Date.now(),
+      hyp: 'boot',
+      loc: 'BaseHead:inline',
+      msg: 'boot',
+      data: {
+        htmlLang: document.documentElement.getAttribute('lang'),
+        pathname: location.pathname,
+        hasVT: !!document.querySelector('meta[name="astro-view-transitions-enabled"]'),
+      },
+    };
+    append(bootRec);
     document.addEventListener(
       'click',
       function (e) {
         var a = e.target && e.target.closest && e.target.closest('a.lang-switch');
         if (!a) return;
-        send('A', 'BaseHead:click', 'lang-switch click', {
-          from: location.pathname,
-          to: a.getAttribute('href'),
-          htmlLang: document.documentElement.getAttribute('lang'),
-          defaultPrevented: e.defaultPrevented,
-          metaKey: e.metaKey,
-          ctrlKey: e.ctrlKey,
-          button: e.button,
+        append({
+          t: Date.now(),
+          hyp: 'A',
+          loc: 'BaseHead:click',
+          msg: 'lang-switch click',
+          data: {
+            from: location.pathname,
+            to: a.getAttribute('href'),
+            htmlLang: document.documentElement.getAttribute('lang'),
+            defaultPrevented: e.defaultPrevented,
+            metaKey: e.metaKey,
+            ctrlKey: e.ctrlKey,
+            button: e.button,
+            hasReloadAttr: a.hasAttribute('data-astro-reload'),
+          },
         });
       },
       true
     );
     document.addEventListener('astro:before-preparation', function (e) {
-      send('A', 'BaseHead:astro:before-preparation', 'VT before-prep', {
-        from: location.pathname,
-        to: e.to && e.to.url ? e.to.url.pathname : null,
-        direction: e.direction || null,
+      append({
+        t: Date.now(),
+        hyp: 'A',
+        loc: 'BaseHead:astro:before-preparation',
+        msg: 'VT before-prep',
+        data: {
+          from: location.pathname,
+          to: e.to && e.to.url ? e.to.url.pathname : null,
+          direction: e.direction || null,
+          navigationType: e.navigationType || null,
+        },
       });
     });
     document.addEventListener('astro:after-swap', function (e) {
-      send('A', 'BaseHead:astro:after-swap', 'VT after-swap', {
-        from: location.pathname,
-        to: e.to && e.to.url ? e.to.url.pathname : null,
-        newHtmlLang: document.documentElement.getAttribute('lang'),
+      append({
+        t: Date.now(),
+        hyp: 'A',
+        loc: 'BaseHead:astro:after-swap',
+        msg: 'VT after-swap',
+        data: {
+          from: location.pathname,
+          to: e.to && e.to.url ? e.to.url.pathname : null,
+          newHtmlLang: document.documentElement.getAttribute('lang'),
+        },
       });
     });
     window.addEventListener('pageshow', function (e) {
-      send('B', 'BaseHead:pageshow', 'pageshow', {
-        pathname: location.pathname,
-        persisted: e.persisted,
-        htmlLang: document.documentElement.getAttribute('lang'),
+      append({
+        t: Date.now(),
+        hyp: 'B',
+        loc: 'BaseHead:pageshow',
+        msg: 'pageshow',
+        data: {
+          pathname: location.pathname,
+          persisted: e.persisted,
+          htmlLang: document.documentElement.getAttribute('lang'),
+        },
       });
     });
     window.addEventListener('beforeunload', function () {
-      send('B', 'BaseHead:beforeunload', 'beforeunload', {
-        pathname: location.pathname,
-        htmlLang: document.documentElement.getAttribute('lang'),
+      append({
+        t: Date.now(),
+        hyp: 'B',
+        loc: 'BaseHead:beforeunload',
+        msg: 'beforeunload',
+        data: {
+          pathname: location.pathname,
+          htmlLang: document.documentElement.getAttribute('lang'),
+        },
       });
     });
+    // Expose a small window function for the user to dump logs from devtools.
+    window.__dumpNavLog = function () {
+      var text = (JSON.parse(localStorage.getItem(LS_KEY) || '[]') || [])
+        .map(function (r) {
+          return r.t + ' [' + r.hyp + '] ' + r.loc + ' :: ' + r.msg + ' :: ' + JSON.stringify(r.data);
+        })
+        .join('\n');
+      console.log('NAV LOG DUMP\n' + text);
+      return text;
+    };
   })();
 </script><!-- #endregion agent log --><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><link rel="stylesheet" href="/_astro/_slug_.DKTWclfG.css"><script type="module" src="/_astro/hoisted.BBRfXyR4.js"></script></head> <body> <header class="site-header"> <div class="container site-header__inner"> <a href="/en/" class="site-header__brand">yeye</a> <nav class="site-header__nav" aria-label="Primary"> <a href="/en/archive/" class="nav-link"> Archive </a><a href="/en/tags/" class="nav-link" aria-current="page"> Tags </a><a href="/en/about/" class="nav-link"> About </a> <a href="/tags/" class="lang-switch" aria-label="Switch language to 中文" title="Switch language to 中文"> <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"> <circle cx="12" cy="12" r="10"></circle> <path d="M2 12h20"></path> <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path> </svg> <span>中文</span> </a> <button type="button" class="icon-btn" data-theme-toggle aria-label="Toggle theme" title="Toggle theme"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-theme-icon> <circle cx="12" cy="12" r="4"></circle> <path d="M12 2v2"></path> <path d="M12 20v2"></path> <path d="m4.93 4.93 1.41 1.41"></path> <path d="m17.66 17.66 1.41 1.41"></path> <path d="M2 12h2"></path> <path d="M20 12h2"></path> <path d="m6.34 17.66-1.41 1.41"></path> <path d="m19.07 4.93-1.41 1.41"></path> </svg> </button>  </nav> </div> </header> <main class="site-content"> <div class="container">  <header class="page-header"> <h1 class="page-header__title">Tags</h1> <p class="page-header__description">Browse posts by tag.</p> </header> <div class="tag-cloud"> <a class="tag" href="/en/tags/Design/">
 #Design <span style="color: var(--text-faint);">(1)</span> </a><a class="tag" href="/en/tags/CSS/">
