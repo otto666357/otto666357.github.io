@@ -113,3 +113,79 @@ if (type === 'article') {
     }
   })();
 </script>
+
+<!-- #region agent log (hypothesis: VT cross-language navigation behaviour) -->
+<script is:inline>
+  (function () {
+    var ENDPOINT = 'http://127.0.0.1:7902/ingest/1009a666-9bca-4d90-b02d-1c4df45cf258';
+    var SESSION = '2d1864';
+    var RUN_ID = 'observe-' + Date.now();
+    function send(hyp, loc, msg, data) {
+      try {
+        fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': SESSION },
+          body: JSON.stringify({
+            sessionId: SESSION,
+            runId: RUN_ID,
+            hypothesisId: hyp,
+            location: loc,
+            message: msg,
+            data: data || {},
+            timestamp: Date.now(),
+          }),
+        }).catch(function () {});
+      } catch (_) {}
+    }
+    send('boot', 'BaseHead:inline', 'boot', {
+      htmlLang: document.documentElement.getAttribute('lang'),
+      pathname: location.pathname,
+      hasVT: !!document.querySelector('meta[name="astro-view-transitions-enabled"]'),
+    });
+    document.addEventListener(
+      'click',
+      function (e) {
+        var a = e.target && e.target.closest && e.target.closest('a.lang-switch');
+        if (!a) return;
+        send('A', 'BaseHead:click', 'lang-switch click', {
+          from: location.pathname,
+          to: a.getAttribute('href'),
+          htmlLang: document.documentElement.getAttribute('lang'),
+          defaultPrevented: e.defaultPrevented,
+          metaKey: e.metaKey,
+          ctrlKey: e.ctrlKey,
+          button: e.button,
+        });
+      },
+      true
+    );
+    document.addEventListener('astro:before-preparation', function (e) {
+      send('A', 'BaseHead:astro:before-preparation', 'VT before-prep', {
+        from: location.pathname,
+        to: e.to && e.to.url ? e.to.url.pathname : null,
+        direction: e.direction || null,
+      });
+    });
+    document.addEventListener('astro:after-swap', function (e) {
+      send('A', 'BaseHead:astro:after-swap', 'VT after-swap', {
+        from: location.pathname,
+        to: e.to && e.to.url ? e.to.url.pathname : null,
+        newHtmlLang: document.documentElement.getAttribute('lang'),
+      });
+    });
+    window.addEventListener('pageshow', function (e) {
+      send('B', 'BaseHead:pageshow', 'pageshow', {
+        pathname: location.pathname,
+        persisted: e.persisted,
+        htmlLang: document.documentElement.getAttribute('lang'),
+      });
+    });
+    window.addEventListener('beforeunload', function () {
+      send('B', 'BaseHead:beforeunload', 'beforeunload', {
+        pathname: location.pathname,
+        htmlLang: document.documentElement.getAttribute('lang'),
+      });
+    });
+  })();
+</script>
+<!-- #endregion agent log -->

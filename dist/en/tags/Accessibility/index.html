@@ -9,6 +9,78 @@
       document.documentElement.setAttribute('data-theme', 'light');
     }
   })();
-</script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><link rel="stylesheet" href="/_astro/_slug_.DKTWclfG.css"><script type="module" src="/_astro/hoisted.BBRfXyR4.js"></script></head> <body> <header class="site-header"> <div class="container site-header__inner"> <a href="/en/" class="site-header__brand">yeye</a> <nav class="site-header__nav" aria-label="Primary"> <a href="/en/archive/" class="nav-link"> Archive </a><a href="/en/tags/" class="nav-link" aria-current="page"> Tags </a><a href="/en/about/" class="nav-link"> About </a> <a href="/tags/Accessibility/" class="lang-switch" aria-label="Switch language to 中文" title="Switch language to 中文"> <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"> <circle cx="12" cy="12" r="10"></circle> <path d="M2 12h20"></path> <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path> </svg> <span>中文</span> </a> <button type="button" class="icon-btn" data-theme-toggle aria-label="Toggle theme" title="Toggle theme"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-theme-icon> <circle cx="12" cy="12" r="4"></circle> <path d="M12 2v2"></path> <path d="M12 20v2"></path> <path d="m4.93 4.93 1.41 1.41"></path> <path d="m17.66 17.66 1.41 1.41"></path> <path d="M2 12h2"></path> <path d="M20 12h2"></path> <path d="m6.34 17.66-1.41 1.41"></path> <path d="m19.07 4.93-1.41 1.41"></path> </svg> </button>  </nav> </div> </header> <main class="site-content"> <div class="container">  <header class="page-header"> <p style="color: var(--text-muted); margin: 0 0 var(--space-2);"> <a href="/en/tags/">&larr; Tags</a> </p> <h1 class="page-header__title">#Accessibility</h1> </header> <ul class="post-list"> <li> <article class="post-card"> <h3 class="post-card__title"> <a href="/en/posts/dark-mode-design/">Design Tradeoffs in Dark Mode</a> </h3> <p class="post-card__description">Dark mode isn&#39;t just flipping the background to black. A discussion of tones, contrast, and when not to use pure black.</p> <div class="post-card__meta"> <time datetime="2025-02-08T00:00:00.000Z">February 8, 2025</time> <span class="post-card__tags"> <a class="tag" href="/en/tags/Design/">#Design</a><a class="tag" href="/en/tags/CSS/">#CSS</a><a class="tag" href="/en/tags/Accessibility/">#Accessibility</a> </span> </div> </article> </li> </ul> </div> </main> <footer class="site-footer"> <div class="container site-footer__inner"> <span>&copy; 2026 otto666357. All rights reserved.</span> <span> <a href="https://github.com/otto666357" rel="noopener" target="_blank">GitHub</a>
+</script><!-- #region agent log (hypothesis: VT cross-language navigation behaviour) --><script>
+  (function () {
+    var ENDPOINT = 'http://127.0.0.1:7902/ingest/1009a666-9bca-4d90-b02d-1c4df45cf258';
+    var SESSION = '2d1864';
+    var RUN_ID = 'observe-' + Date.now();
+    function send(hyp, loc, msg, data) {
+      try {
+        fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': SESSION },
+          body: JSON.stringify({
+            sessionId: SESSION,
+            runId: RUN_ID,
+            hypothesisId: hyp,
+            location: loc,
+            message: msg,
+            data: data || {},
+            timestamp: Date.now(),
+          }),
+        }).catch(function () {});
+      } catch (_) {}
+    }
+    send('boot', 'BaseHead:inline', 'boot', {
+      htmlLang: document.documentElement.getAttribute('lang'),
+      pathname: location.pathname,
+      hasVT: !!document.querySelector('meta[name="astro-view-transitions-enabled"]'),
+    });
+    document.addEventListener(
+      'click',
+      function (e) {
+        var a = e.target && e.target.closest && e.target.closest('a.lang-switch');
+        if (!a) return;
+        send('A', 'BaseHead:click', 'lang-switch click', {
+          from: location.pathname,
+          to: a.getAttribute('href'),
+          htmlLang: document.documentElement.getAttribute('lang'),
+          defaultPrevented: e.defaultPrevented,
+          metaKey: e.metaKey,
+          ctrlKey: e.ctrlKey,
+          button: e.button,
+        });
+      },
+      true
+    );
+    document.addEventListener('astro:before-preparation', function (e) {
+      send('A', 'BaseHead:astro:before-preparation', 'VT before-prep', {
+        from: location.pathname,
+        to: e.to && e.to.url ? e.to.url.pathname : null,
+        direction: e.direction || null,
+      });
+    });
+    document.addEventListener('astro:after-swap', function (e) {
+      send('A', 'BaseHead:astro:after-swap', 'VT after-swap', {
+        from: location.pathname,
+        to: e.to && e.to.url ? e.to.url.pathname : null,
+        newHtmlLang: document.documentElement.getAttribute('lang'),
+      });
+    });
+    window.addEventListener('pageshow', function (e) {
+      send('B', 'BaseHead:pageshow', 'pageshow', {
+        pathname: location.pathname,
+        persisted: e.persisted,
+        htmlLang: document.documentElement.getAttribute('lang'),
+      });
+    });
+    window.addEventListener('beforeunload', function () {
+      send('B', 'BaseHead:beforeunload', 'beforeunload', {
+        pathname: location.pathname,
+        htmlLang: document.documentElement.getAttribute('lang'),
+      });
+    });
+  })();
+</script><!-- #endregion agent log --><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><link rel="stylesheet" href="/_astro/_slug_.DKTWclfG.css"><script type="module" src="/_astro/hoisted.BBRfXyR4.js"></script></head> <body> <header class="site-header"> <div class="container site-header__inner"> <a href="/en/" class="site-header__brand">yeye</a> <nav class="site-header__nav" aria-label="Primary"> <a href="/en/archive/" class="nav-link"> Archive </a><a href="/en/tags/" class="nav-link" aria-current="page"> Tags </a><a href="/en/about/" class="nav-link"> About </a> <a href="/tags/Accessibility/" class="lang-switch" aria-label="Switch language to 中文" title="Switch language to 中文"> <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"> <circle cx="12" cy="12" r="10"></circle> <path d="M2 12h20"></path> <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path> </svg> <span>中文</span> </a> <button type="button" class="icon-btn" data-theme-toggle aria-label="Toggle theme" title="Toggle theme"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-theme-icon> <circle cx="12" cy="12" r="4"></circle> <path d="M12 2v2"></path> <path d="M12 20v2"></path> <path d="m4.93 4.93 1.41 1.41"></path> <path d="m17.66 17.66 1.41 1.41"></path> <path d="M2 12h2"></path> <path d="M20 12h2"></path> <path d="m6.34 17.66-1.41 1.41"></path> <path d="m19.07 4.93-1.41 1.41"></path> </svg> </button>  </nav> </div> </header> <main class="site-content"> <div class="container">  <header class="page-header"> <p style="color: var(--text-muted); margin: 0 0 var(--space-2);"> <a href="/en/tags/">&larr; Tags</a> </p> <h1 class="page-header__title">#Accessibility</h1> </header> <ul class="post-list"> <li> <article class="post-card"> <h3 class="post-card__title"> <a href="/en/posts/dark-mode-design/">Design Tradeoffs in Dark Mode</a> </h3> <p class="post-card__description">Dark mode isn&#39;t just flipping the background to black. A discussion of tones, contrast, and when not to use pure black.</p> <div class="post-card__meta"> <time datetime="2025-02-08T00:00:00.000Z">February 8, 2025</time> <span class="post-card__tags"> <a class="tag" href="/en/tags/Design/">#Design</a><a class="tag" href="/en/tags/CSS/">#CSS</a><a class="tag" href="/en/tags/Accessibility/">#Accessibility</a> </span> </div> </article> </li> </ul> </div> </main> <footer class="site-footer"> <div class="container site-footer__inner"> <span>&copy; 2026 otto666357. All rights reserved.</span> <span> <a href="https://github.com/otto666357" rel="noopener" target="_blank">GitHub</a>
 &middot;
 <a href="/zh/rss.xml">RSS</a> </span> </div> </footer> </body></html>
