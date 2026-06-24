@@ -192,6 +192,10 @@ if (type === 'article') {
       function (e) {
         var a = e.target && e.target.closest && e.target.closest('a.lang-switch');
         if (!a) return;
+        var hrefAttr = a.getAttribute('href');
+        var resolved;
+        try { resolved = new URL(a.href, location.href).href; } catch (_) { resolved = a.href; }
+        var vtMeta = document.querySelector('meta[name="astro-view-transitions-enabled"]');
         append({
           t: Date.now(),
           hyp: 'A',
@@ -199,13 +203,16 @@ if (type === 'article') {
           msg: 'lang-switch click',
           data: {
             from: location.pathname,
-            to: a.getAttribute('href'),
+            to: resolved,
+            hrefAttr: hrefAttr,
             htmlLang: document.documentElement.getAttribute('lang'),
             defaultPrevented: e.defaultPrevented,
             metaKey: e.metaKey,
             ctrlKey: e.ctrlKey,
             button: e.button,
-            hasReloadAttr: a.hasAttribute('data-astro-reload'),
+            hasReloadAttr: a.dataset.astroReload !== undefined,
+            hasVTMeta: !!vtMeta,
+            vtMetaContent: vtMeta ? vtMeta.getAttribute('content') : null,
           },
         });
         render();
