@@ -23,20 +23,6 @@ export function getLocalizedPath(path: string, lang: Language): string {
   return stripped === '/' ? `/${lang}/` : `/${lang}${stripped.startsWith('/') ? '' : '/'}${stripped}`;
 }
 
-// Like getLocalizedPath, but never returns the SSR-redirect page "/" when the
-// target language is the default. This avoids a 302 redirect hop in
-// client-side navigations (e.g. the language switcher), which the
-// Astro view-transitions router fetches and follows, making the transition
-// feel like a full reload.
-export function getLanguageSwitchPath(path: string, lang: Language): string {
-  const stripped = path.replace(/^\/(zh|en)(?=\/|$)/, '') || '/';
-  if (lang === defaultLanguage) {
-    if (stripped === '/') return `/${defaultLanguage}/`;
-    return stripped.startsWith('/') ? stripped : `/${stripped}`;
-  }
-  return stripped === '/' ? `/${lang}/` : `/${lang}${stripped.startsWith('/') ? '' : '/'}${stripped}`;
-}
-
 export function getAlternateLanguage(lang: Language): Language {
   return lang === 'zh' ? 'en' : 'zh';
 }
