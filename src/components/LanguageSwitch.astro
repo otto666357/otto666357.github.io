@@ -1,5 +1,5 @@
 ---
-import { getAlternateLanguage, getLocalizedPath, type Language } from '~/i18n/utils';
+import { getAlternateLanguage, type Language } from '~/i18n/utils';
 import { languages } from '~/i18n/ui';
 
 interface Props {
@@ -8,7 +8,14 @@ interface Props {
 
 const { currentLang } = Astro.props;
 const altLang = getAlternateLanguage(currentLang);
-const altPath = getLocalizedPath(Astro.url.pathname, altLang);
+// Strip an existing /zh or /en prefix and always prepend /:altLang so we never
+// emit the bare "/" path. The bare "/" URL is reserved by the SSR redirect
+// (src/pages/index.astro) which is served as a meta-refresh HTML page on
+// GitHub Pages; that page lacks the Astro view-transitions meta tag, so the
+// view-transition router would fail to swap and fall back to a hard reload.
+const stripped = Astro.url.pathname.replace(/^\/(zh|en)(?=\/|$)/, '') || '/';
+const tail = stripped === '/' ? '/' : `${stripped.startsWith('/') ? '' : '/'}${stripped}`;
+const altPath = `/${altLang}${tail}`;
 const altLabel = languages[altLang];
 ---
 <a
