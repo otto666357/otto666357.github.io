@@ -1,26 +1,31 @@
 ---
 import { getLangFromUrl, type Language } from '~/i18n/utils';
 import { defaultLanguage } from '~/i18n/ui';
+import { languages } from '~/i18n/ui';
 
 const lang = getLangFromUrl(Astro.url);
 const path = Astro.url.pathname;
-// Always prefix with /:lang so even the default locale gets /zh/ — matches
-// prefixDefaultLocale: true in astro.config and GitHub Pages file structure.
 const homeHref = `/${lang}/`;
 const archiveHref = `/${lang}/archive/`;
 const tagsHref = `/${lang}/tags/`;
 const aboutHref = `/${lang}/about/`;
 
-const navItems: { key: keyof typeof import('~/i18n/ui').ui.zh; href: string }[] = [
-  { key: 'nav.archive', href: archiveHref },
-  { key: 'nav.tags', href: tagsHref },
-  { key: 'nav.about', href: aboutHref },
+const navItems: { label: string; href: string }[] = [
+  { label: lang === 'zh' ? '归档' : 'Archive', href: archiveHref },
+  { label: lang === 'zh' ? '标签' : 'Tags', href: tagsHref },
+  { label: lang === 'zh' ? '关于' : 'About', href: aboutHref },
 ];
 
 function isCurrent(href: string): boolean {
   if (href === homeHref) return path === homeHref || path === `/${lang}` || path === `/${lang}/`;
   return path.startsWith(href);
 }
+
+const altLang = lang === 'zh' ? 'en' : 'zh';
+const stripped = path.replace(/^\/(zh|en)(?=\/|$)/, '') || '/';
+const tail = stripped === '/' ? '/' : `${stripped.startsWith('/') ? '' : '/'}${stripped}`;
+const langSwitchHref = `/${altLang}${tail}`;
+const langSwitchLabel = languages[altLang];
 ---
 <header class="site-header">
   <div class="container site-header__inner">
@@ -28,13 +33,66 @@ function isCurrent(href: string): boolean {
     <nav class="site-header__nav" aria-label="Primary">
       {
         navItems.map((item) => (
-          <a id={`__hdr_${item.key.replace('.','_')}`} href={item.href} class="nav-link" aria-current={isCurrent(item.href) ? 'page' : undefined}>
-            {t(item.key, lang)}
+          <a href={item.href} class="nav-link" aria-current={isCurrent(item.href) ? 'page' : undefined}>
+            {item.label}
           </a>
         ))
       }
-      <LanguageSwitch currentLang={lang} />
-      <ThemeToggle />
+      <a
+        href={langSwitchHref}
+        class="lang-switch"
+        aria-label={`Switch language to ${langSwitchLabel}`}
+        title={`Switch language to ${langSwitchLabel}`}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M2 12h20"></path>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>{langSwitchLabel}</span>
+      </a>
+      <button
+        type="button"
+        class="icon-btn"
+        data-theme-toggle
+        aria-label={lang === 'zh' ? '切换主题' : 'Toggle theme'}
+        title={lang === 'zh' ? '切换主题' : 'Toggle theme'}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          data-theme-icon
+        >
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2"></path>
+          <path d="M12 20v2"></path>
+          <path d="m4.93 4.93 1.41 1.41"></path>
+          <path d="m17.66 17.66 1.41 1.41"></path>
+          <path d="M2 12h2"></path>
+          <path d="M20 12h2"></path>
+          <path d="m6.34 17.66-1.41 1.41"></path>
+          <path d="m19.07 4.93-1.41 1.41"></path>
+        </svg>
+      </button>
     </nav>
   </div>
 </header>
