@@ -1,6 +1,7 @@
 ---
 const currentYear = new Date().getFullYear();
 const githubHref = 'https://github.com/otto666357';
+const lang = Astro.url.pathname.startsWith('/en') ? 'en' : 'zh';
 ---
 <footer class="site-footer">
   <div class="container site-footer__inner">
@@ -8,7 +9,7 @@ const githubHref = 'https://github.com/otto666357';
     <span>
       <a href={githubHref} rel="noopener" target="_blank">GitHub</a>
       &middot;
-      <a href="/zh/rss.xml">RSS</a>
+      <a href={`/${lang}/rss.xml`}>RSS</a>
     </span>
   </div>
 </footer>
