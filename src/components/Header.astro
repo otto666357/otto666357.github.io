@@ -25,11 +25,11 @@ function isCurrent(href: string): boolean {
 ---
 <header class="site-header">
   <div class="container site-header__inner">
-    <a href={homeHref} class="site-header__brand">yeye</a>
+    <a id="__hdr_home" href={homeHref} class="site-header__brand">yeye</a>
     <nav class="site-header__nav" aria-label="Primary">
       {
         navItems.map((item) => (
-          <a href={item.href} class="nav-link" aria-current={isCurrent(item.href) ? 'page' : undefined}>
+          <a id={`__hdr_${item.key.replace('.','_')}`} href={item.href} class="nav-link" aria-current={isCurrent(item.href) ? 'page' : undefined}>
             {t(item.key, lang)}
           </a>
         ))
@@ -39,3 +39,42 @@ function isCurrent(href: string): boolean {
     </nav>
   </div>
 </header>
+
+<!-- #region agent debug -->
+<script is:inline>
+(function () {
+  var lsKey = '__hdr_debug';
+  try {
+    var arr = JSON.parse(localStorage.getItem(lsKey) || '[]');
+    arr.push({ t: Date.now(), pathname: location.pathname, action: 'load' });
+    if (arr.length > 40) arr = arr.slice(-40);
+    localStorage.setItem(lsKey, JSON.stringify(arr));
+  } catch (_) {}
+  var box = document.createElement('div');
+  box.id = '__hdr_box';
+  box.style.cssText = 'position:fixed;bottom:8px;left:8px;max-width:400px;background:rgba(10,10,15,.95);color:#d4f7d4;font:11px/1.55 monospace;padding:8px 10px;border-radius:6px;z-index:2147483647;white-space:pre-wrap;word-break:break-all;box-shadow:0 2px 16px rgba(0,0,0,.6);max-height:300px;overflow-y:auto';
+  function render() {
+    var data = JSON.parse(localStorage.getItem(lsKey) || '[]');
+    box.textContent = JSON.stringify(data.slice(-8), null, 2);
+  }
+  render();
+  document.querySelectorAll('a[id]').forEach(function (a) {
+    a.addEventListener('mouseenter', function () {
+      try {
+        var arr2 = JSON.parse(localStorage.getItem(lsKey) || '[]');
+        arr2.push({ t: Date.now(), pathname: location.pathname, action: 'hover:' + a.id, href: a.getAttribute('href'), text: a.textContent.trim() });
+        if (arr2.length > 40) arr2 = arr2.slice(-40);
+        localStorage.setItem(lsKey, JSON.stringify(arr2));
+        render();
+      } catch (_) {}
+    });
+  });
+  box.style.display = 'none';
+  box.title = 'Click to toggle debug box';
+  box.style.cursor = 'pointer';
+  box.addEventListener('click', function () { box.style.display = box.style.display === 'none' ? 'block' : 'none'; });
+  document.body.appendChild(box);
+  console.log('[HDR DEBUG]', JSON.parse(localStorage.getItem(lsKey) || '[]'));
+})();
+</script>
+<!-- #endregion -->
