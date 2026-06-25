@@ -1,16 +1,15 @@
 ---
-import { getLangFromUrl, getLocalizedPath, type Language } from '~/i18n/utils';
-import { languages, defaultLanguage } from '~/i18n/ui';
-import ThemeToggle from './ThemeToggle.astro';
-import LanguageSwitch from './LanguageSwitch.astro';
-import { t } from '~/i18n/ui';
+import { getLangFromUrl, type Language } from '~/i18n/utils';
+import { defaultLanguage } from '~/i18n/ui';
 
 const lang = getLangFromUrl(Astro.url);
 const path = Astro.url.pathname;
-const homeHref = lang === defaultLanguage ? '/' : `/${lang}/`;
-const archiveHref = getLocalizedPath('/archive', lang) + '/';
-const tagsHref = getLocalizedPath('/tags', lang) + '/';
-const aboutHref = getLocalizedPath('/about', lang) + '/';
+// Always prefix with /:lang so even the default locale gets /zh/ — matches
+// prefixDefaultLocale: true in astro.config and GitHub Pages file structure.
+const homeHref = `/${lang}/`;
+const archiveHref = `/${lang}/archive/`;
+const tagsHref = `/${lang}/tags/`;
+const aboutHref = `/${lang}/about/`;
 
 const navItems: { key: keyof typeof import('~/i18n/ui').ui.zh; href: string }[] = [
   { key: 'nav.archive', href: archiveHref },
